@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "SprintSynapse",
+  "version": "0.0.1",
+  "description": "AI-Powered Sprint Intelligence for Jira.",
+
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "scripting"
+  ],
+  
+  "host_permissions": [
+    "https://*.atlassian.net/*"
+  ],
+
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Analyze this Jira page"
+  }
+}
