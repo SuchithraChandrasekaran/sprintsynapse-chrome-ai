@@ -2,13 +2,11 @@
 AI-Powered Sprint Intelligence for Agile Teams
 
 ## Overview
-SprintSynapse is a Chrome extension that brings AI-powered sprint analysis directly to your Jira workflow. By leveraging Chrome's built-in AI capabilities, it provides instant insights, identifies blockers, and generates reports while keeping all your data locally processed for maximum security and privacy.
+SprintSynapse is a Chrome extension that brings AI-powered sprint analysis directly to your Jira workflow. By leveraging Chrome's built-in AI capabilities, it provides instant insights, and generates reports while keeping all your data locally processed for maximum security and privacy.
 
 ## Features
 - **Smart Sprint Analysis**: Real-time sprint progress analytics and forecasting
-- **Blocker Detection**: Early identification of potential impediments
 - **Automated Reporting**: Generate stakeholder-ready updates instantly
-- **Multi-language Support**: Translate content directly within Jira
 - **Content Optimization**: Improve clarity and professionalism of sprint documentation
 - **Privacy-First Design**: All AI processing occurs on-device using Chrome's local models
 
@@ -17,6 +15,21 @@ SprintSynapse is a Chrome extension that brings AI-powered sprint analysis direc
 - **AI Engine**: Chrome Built-in AI APIs (Gemini Nano)
 - **Integration**: Jira Cloud/Server/Data Center
 - **Security**: Local processing - no data leaves your browser
+
+## Directory Structure
+```
+sprintsynapse-chrome-ai/
+├── manifest.json
+├── popup.html
+├── popup.js
+├── content.js
+├── background.js
+├── service-worker.js
+├ popup.css
+└── icons/
+    └── icon25.png
+    └── icon125.png
+```    
 
 ## Installation
 
@@ -46,13 +59,49 @@ chrome://flags/#summarization-api-for-gemini-nano
 5. Copy or export results as needed
 
 ## Supported APIs
+- Summarizer API: Sprint analysis and reporting
 
-- Prompt API for custom analysis
-- Summarizer API for sprint reports
-- Writer API for status updates
-- Translator API for multilingual support
-- Rewriter API for content optimization
-- Proofreader API for documentation quality
+- Prompt API: Blocker risk assessment and contextual analysis
+
+- Writer API: Professional status update generation
+
+## Architecture
+Content Scripts: Jira page integration and data extraction
+
+Service Worker: Background operations and API management
+
+Popup Interface: User interaction and results display
+
+
+## API Integration
+
+#### Chrome Summarizer API
+
+Usage: Sprint analysis and progress summarization
+
+Input: Sprint metrics and completion data
+
+Output: Structured summary with key insights
+
+Fallback: Enhanced template-based analysis
+
+#### Chrome Prompt API
+Usage: Contextual blocker analysis and risk assessment
+
+Input: Selected text and issue context
+
+Output: Risk evaluation and recommendations
+
+Configuration: Custom system prompts for Scrum context
+
+#### Chrome Writer API
+Usage: Professional status update generation
+
+Input: Sprint progress metrics and team context
+
+Output: Formatted email drafts and reports
+
+Templates: Multiple output formats and styles
 
 ## License
 
