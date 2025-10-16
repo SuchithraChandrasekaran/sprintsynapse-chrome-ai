@@ -1,25 +1,34 @@
 {
-  "manifest_version": 3,
-  "name": "SprintSynapse",
-  "version": "0.0.1",
-  "description": "AI-Powered Sprint Intelligence for Jira.",
-
-  "permissions": [
-    "activeTab",
-    "contextMenus",
-    "scripting"
-  ],
-  
-  "host_permissions": [
-    "https://*.atlassian.net/*"
-  ],
-
-  "background": {
-    "service_worker": "service-worker.js"
-  },
-
-  "action": {
-    "default_popup": "popup.html",
-    "default_title": "Analyze this Jira page"
-  }
+    "manifest_version": 3,
+    "name": "SprintSynapse Professional",
+    "version": "1.0",
+    "description": "AI-powered sprint analysis and status updates",
+    
+    "permissions": [
+        "activeTab",
+        "storage",
+        "contextMenus"
+    ],
+    
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "SprintSynapse"
+    },
+    
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"],
+            "run_at": "document_end"
+        }
+    ],
+    
+    "background": {
+        "service_worker": "background.js"
+    },
+    
+    "icons": {
+        "25": "icons/icon25.png",
+        "125": "icons/icon125.png"
+    }
 }

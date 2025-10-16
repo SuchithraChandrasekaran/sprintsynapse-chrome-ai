@@ -1,17 +1,134 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>SprintSynapse</title>
-		<link rel="stylesheet" href="popup.css">
-	</head>
-	<body>
-		<div class="container">
-			<h1>SprintSynapse</h1>
-			<p>AI-Powered Sprint Intelligence</p>
-			<button id="analyze-page">Analyze This Page</button>
-			<div id="result"></div>
-		</div>
-		<script src="popup.js"></script>
-	</body>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 320px;
+            padding: 16px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            color: #2d3748;
+            font-weight: 600;
+        }
+        .header .subtitle {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .action-btn {
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-size: 12px;
+            padding: 12px;
+            background: #f0f4ff;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .language-section {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e1e5e9;
+        }
+        .language-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 12px;
+        }
+        #languageSelect {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 12px;
+            background: white;
+            cursor: pointer;
+        }
+        #languageSelect:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .footer {
+            text-align: center;
+            padding-top: 16px;
+            border-top: 1px solid #e1e5e9;
+            color: #6b7280;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SprintSynapse</h1>
+        <div class="subtitle">Professional Edition</div>
+    </div>
+
+    <div id="loading" class="loading">
+        Opening form on the page...
+    </div>
+
+    <div class="button-container">
+        <button id="sprintSummary" class="action-btn">
+            📊 Sprint Summary
+        </button>
+        <button id="statusUpdate" class="action-btn">
+            📝 Status Update
+        </button>
+    </div>
+
+    <div class="footer">
+        Sprint Management Tools
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
 </html>

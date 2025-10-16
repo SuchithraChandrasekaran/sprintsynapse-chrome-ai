@@ -1,0 +1,135 @@
+/* content.css - Professional Styling for SprintSynapse AI */
+
+/* Modal backdrop with blur */
+.sprint-synapse-backdrop {
+    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Smooth animations */
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes modalSlideOut {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translate(-50%, -60%) scale(0.9);
+    }
+}
+
+/* Professional button styles */
+.sprint-synapse-btn {
+    transition: all 0.2s ease-in-out !important;
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
+}
+
+.sprint-synapse-btn:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.sprint-synapse-btn:active {
+    transform: translateY(0) !important;
+}
+
+/* AI-enhanced button glow */
+.ai-enhanced-glow {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Professional input styles */
+.sprint-synapse-input {
+    border: 2px solid #e2e8f0 !important;
+    transition: border-color 0.2s ease-in-out !important;
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
+}
+
+.sprint-synapse-input:focus {
+    border-color: #667eea !important;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    outline: none !important;
+}
+
+/* Gradient headers */
+.sprint-synapse-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+}
+
+/* Status indicators */
+.status-ai-enabled {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.status-enhanced {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+}
+
+/* Notification styles */
+.sprint-synapse-notification {
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Code block styling */
+.sprint-synapse-code {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+}
+
+/* Draggable element cursor */
+.sprint-synapse-draggable {
+    cursor: move !important;
+}
+
+.sprint-synapse-draggable:active {
+    cursor: grabbing !important;
+}
+
+/* Responsive design */
+@media (max-width: 400px) {
+    #sprintForm, #resultModal, #shareModal {
+        min-width: 90vw !important;
+        max-width: 95vw !important;
+        margin: 0 10px !important;
+    }
+}
+
+/* Loading states */
+.sprint-synapse-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.sprint-synapse-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #e2e8f0;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
