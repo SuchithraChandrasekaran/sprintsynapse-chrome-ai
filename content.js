@@ -1,18 +1,19 @@
-// SprintSynapse - Enhanced Professional Edition with Chrome Built-in AI
+// SprintSynapse - with Chrome Built-in AI
 console.log("SprintSynapse AI - Enhanced Edition with Chrome Built-in AI Support");
 
-class SprintSynapseProfessional {
+class SprintSynapse {
     constructor() {
         this.aiCapabilities = {
             summarizer: false,
             writer: false,
             prompt: false,
         };
+        this.isProcessing = false; 
         this.initialize();
     }
 
     async initialize() {
-        console.log("SprintSynapse Professional initialized");
+        console.log("SprintSynapse initialized");
         
         // Check AI capabilities
         await this.checkAICapabilities();
@@ -30,45 +31,66 @@ class SprintSynapseProfessional {
             
             if (!aiAPI) {
                 console.log("Chrome Built-in AI not available");
+                console.log("Make sure you're using Chrome Canary 128+ with flags enabled:");
+                console.log("chrome://flags/#optimization-guide-on-device-model");
+                console.log("chrome://flags/#prompt-api-for-gemini-nano");
                 return;
             }
 
             // Check Summarizer API
-            if (aiAPI.summarizer) {
+            if (aiAPI.summarizer && typeof aiAPI.summarizer.capabilities === 'function') {
                 try {
                     const canSummarize = await aiAPI.summarizer.capabilities();
                     this.aiCapabilities.summarizer = canSummarize.available === 'readily' || canSummarize.available === 'after-download';
-                    console.log("Summarizer API available:", this.aiCapabilities.summarizer);
+                    console.log("Summarizer API available:", this.aiCapabilities.summarizer, canSummarize);
                 } catch (e) {
                     console.log("Summarizer API check failed:", e);
+                    this.aiCapabilities.summarizer = false;
                 }
+            } else {
+                console.log("Summarizer API not found");
+                this.aiCapabilities.summarizer = false;
             }
 
             // Check Writer API
-            if (aiAPI.writer) {
+            if (aiAPI.writer && typeof aiAPI.writer.capabilities === 'function') {
                 try {
                     const canWrite = await aiAPI.writer.capabilities();
                     this.aiCapabilities.writer = canWrite.available === 'readily' || canWrite.available === 'after-download';
-                    console.log("Writer API available:", this.aiCapabilities.writer);
+                    console.log("Writer API available:", this.aiCapabilities.writer, canWrite);
                 } catch (e) {
                     console.log("Writer API check failed:", e);
+                    this.aiCapabilities.writer = false;
                 }
+            } else {
+                console.log("Writer API not found");
+                this.aiCapabilities.writer = false;
             }
 
             // Check Prompt API (languageModel)
-            if (aiAPI.languageModel) {
+            if (aiAPI.languageModel && typeof aiAPI.languageModel.capabilities === 'function') {
                 try {
                     const canPrompt = await aiAPI.languageModel.capabilities();
                     this.aiCapabilities.prompt = canPrompt.available === 'readily' || canPrompt.available === 'after-download';
-                    console.log("Prompt API available:", this.aiCapabilities.prompt);
+                    console.log("Prompt API available:", this.aiCapabilities.prompt, canPrompt);
                 } catch (e) {
                     console.log("Prompt API check failed:", e);
+                    this.aiCapabilities.prompt = false;
                 }
+            } else {
+                console.log("Prompt API (languageModel) not found");
+                this.aiCapabilities.prompt = false;
             }
 
-            console.log("AI Capabilities:", this.aiCapabilities);
+            console.log("Final AI Capabilities:", this.aiCapabilities);
+            
         } catch (error) {
             console.error("Error checking AI capabilities:", error);
+            this.aiCapabilities = {
+                summarizer: false,
+                writer: false,
+                prompt: false
+            };
         }
     }
 
@@ -76,15 +98,61 @@ class SprintSynapseProfessional {
     isJiraPage() {
         const hostname = window.location.hostname;
         const pathname = window.location.pathname;
+        const url = window.location.href;
         
-        const isJiraDomain = hostname.includes('jira') || hostname.includes('atlassian');
-        const isJiraPath = pathname.includes('/jira/') || pathname.includes('/browse/') || pathname.includes('/secure/');
+        // EXCLUDE marketing/documentation pages
+        const excludedPaths = [
+            '/software/jira',
+            '/software/jira/',
+            '/trial/jira/',
+            '/pricing/',
+            '/blog/',
+            '/community/',
+            '/documentation/',
+            '/help/',
+            '/support/'
+        ];
+        
+        const excludedDomains = [
+            'www.atlassian.com',
+            'confluence.atlassian.com',
+            'community.atlassian.com',
+            'support.atlassian.com',
+            'developer.atlassian.com'
+        ];
+        
+        // Check if current URL matches any excluded patterns
+        const isExcludedDomain = excludedDomains.some(domain => hostname === domain);
+        const isExcludedPath = excludedPaths.some(path => pathname.includes(path));
+        const isMarketingPage = url.includes('/trial/') || 
+                            url.includes('/pricing/');
+        
+        if (isExcludedDomain || isExcludedPath || isMarketingPage) {
+            return false;
+        }
+        
+        // POSITIVE JIRA INDICATORS
+        const isJiraDomain = hostname.includes('jira') || 
+                            hostname.includes('atlassian.net') ||
+                            hostname.includes('atlassian.io');
+        
+        const isJiraPath = pathname.includes('/jira/') || 
+                        pathname.includes('/browse/') || 
+                        pathname.includes('/secure/') ||
+                        pathname.includes('/projects/') ||
+                        pathname.includes('/issues/');
+        
         const hasJiraElements = document.querySelector('[data-test-id*="jira"]') !== null ||
-                               document.querySelector('[class*="jira"]') !== null ||
-                               document.querySelector('#jira') !== null ||
-                               document.querySelector('[data-testid*="issue"]') !== null;
+                            document.querySelector('[class*="jira"]') !== null ||
+                            document.querySelector('#jira') !== null ||
+                            document.querySelector('[data-testid*="issue"]') !== null ||
+                            document.querySelector('[data-test-id*="issue"]') !== null ||
+                            document.querySelector('.jira-page') !== null;
         
-        return isJiraDomain || isJiraPath || hasJiraElements;
+        // Must have at least one strong positive indicator
+        return (isJiraDomain && !isMarketingPage) || 
+            isJiraPath || 
+            hasJiraElements;
     }
 
     // SPRINT SUMMARY with Chrome Built-in AI
@@ -128,22 +196,34 @@ class SprintSynapseProfessional {
             
             return { success: true, data: analysis, source: source };
         } catch (error) {
-            console.error("Summary generation error:", error);
-            if (error.message !== 'User cancelled' && error.message !== 'Form already open') {
-                this.showNotification('Please enter valid sprint details', 'error');
+            if (error.message === 'User cancelled') {
+                console.log("Summary generation cancelled by user");
+                return { success: true, cancelled: true };
             }
+            
+            if (error.message === 'Form already open') {
+                return { success: false, error: error.message };
+            }
+
+            // Only log actual errors
+            console.error("Summary generation error:", error);
             return { success: false, error: error.message };
         }
     }
 
     // STATUS UPDATE with Chrome Built-in AI
     async generateStatusUpdate() {
+         // PREVENT MULTIPLE SUBMISSIONS
+        if (this.isProcessing) {
+            return { success: false, error: "Already processing" };
+        }
         if (!this.isJiraPage()) {
             this.showNotification('⚠️ This feature only works on Jira pages', 'warning');
             return { success: false, error: "Not on Jira page" };
         }
         
         try {
+            this.isProcessing = true;// LOCK
             console.log("Starting status update generation...");
             const userInput = await this.showInputForm('Status Update');
             console.log("User input received:", userInput);
@@ -176,6 +256,12 @@ class SprintSynapseProfessional {
             
             const action = await this.showSharingOptions();
             
+            // Handle cancellation gracefully
+            if (action === 'cancelled') {
+                this.showNotification('Export cancelled', 'info');
+                return { success: true, data: update, source: source, cancelled: true };
+            }
+            
             if (action === 'copy') {
                 await this.copyToClipboard(update);
                 this.showNotification('Status update copied!', 'success');
@@ -189,11 +275,23 @@ class SprintSynapseProfessional {
             
             return { success: true, data: update, source: source };
         } catch (error) {
-            console.error("Status update error:", error);
-            if (error.message !== 'User cancelled' && error.message !== 'Form already open') {
-                this.showNotification('Update generation cancelled', 'error');
+            if (error.message === 'User cancelled') {
+                console.log("Status update cancelled by user");
+                return { success: true, cancelled: true };
             }
+            
+            // Form already open is a handled state
+            if (error.message === 'Form already open') {
+                return { success: false, error: error.message };
+            }
+            
+            // Only log actual errors
+            console.error("Status Update error:", error);
+            this.showNotification('Please enter valid sprint details', 'error');
             return { success: false, error: error.message };
+        }
+        finally {
+            this.isProcessing = false; // UNLOCK 
         }
     }
 
@@ -486,7 +584,7 @@ RECOMMENDATIONS:
 ${'━'.repeat(40)}
 ${this.getRecommendations(completionRate, sprintData)}
 
-[Professional Sprint Analysis - Enhanced Template v2.0]`;
+[Sprint Analysis]`;
 
         return summary;
     }
@@ -521,9 +619,7 @@ completionRate >= 40 ? '• Continue current pace\n• Address any emerging bloc
 '• Focus on high-priority items\n• Coordinate on dependencies'}
 
 Best regards,
-The Sprint Team
-
-[Source: Enhanced Professional Template]`;
+The Sprint Team `;
 
         return { success: true, content: content, source: 'professional-template' };
     }
@@ -587,13 +683,15 @@ Done:        ${doneBar} ${sprintData.done}`;
         }
     }
 
-    // INPUT FORM
     async showInputForm(title) {
         if (document.getElementById('sprintForm')) {
             console.log("Form already open, preventing duplicate");
             this.showNotification('⚠️ Form is already open', 'warning');
             return Promise.reject(new Error('Form already open'));
         }
+        
+        // Initialize validator
+        const validator = new InputValidator();
         
         return new Promise((resolve, reject) => {
             const form = document.createElement('div');
@@ -604,24 +702,35 @@ Done:        ${doneBar} ${sprintData.done}`;
                         <button id="closeForm" style="background: none; border: none; font-size: 20px; cursor: pointer; color: white;">×</button>
                     </div>
                     
+                    <!-- Error Display Area -->
+                    <div id="errorDisplay" style="display: none; margin-bottom: 16px; padding: 12px; background: #fee; border: 2px solid #f88; border-radius: 8px; color: #c33;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">❌ Validation Errors:</div>
+                        <div id="errorList" style="font-size: 13px; line-height: 1.6;"></div>
+                    </div>
+                    
                     <div style="margin-bottom: 20px;">
                         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 14px;">Sprint Name:</label>
-                        <input type="text" id="sprintName" value="Sprint ${new Date().getMonth() + 1}" placeholder="Enter sprint name" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                        <input type="text" id="sprintName" value="Sprint ${new Date().getMonth() + 1}" placeholder="Enter sprint name (optional)" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                        <small style="color: #718096; font-size: 12px; margin-top: 4px; display: block;">Leave empty to use default name</small>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 13px;">📋 To Do:</label>
-                            <input type="number" id="todoCount" value="8" min="0" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-weight: 600;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="number" id="todoCount" value="8" min="0" max="500" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-weight: 600;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 13px;">🔄 In Progress:</label>
-                            <input type="number" id="inProgressCount" value="3" min="0" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-weight: 600;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="number" id="inProgressCount" value="3" min="0" max="500" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-weight: 600;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
                         </div>
                         <div>
                             <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748; font-size: 13px;">✅ Done:</label>
-                            <input type="number" id="doneCount" value="12" min="0" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-weight: 600;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            <input type="number" id="doneCount" value="12" min="0" max="500" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 16px; font-weight: 600;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
                         </div>
+                    </div>
+                    
+                    <div style="background: #f0f9ff; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #3b82f6; margin-bottom: 16px; font-size: 12px; color: #1e40af;">
+                        <strong>💡 Tip:</strong> Values must be between 0 and 500. Negative numbers will be treated as 0.
                     </div>
                     
                     <div style="display: flex; gap: 12px; justify-content: flex-end;">
@@ -653,24 +762,54 @@ Done:        ${doneBar} ${sprintData.done}`;
             submitBtn.onmouseenter = () => submitBtn.style.transform = 'translateY(-2px)';
             submitBtn.onmouseleave = () => submitBtn.style.transform = 'translateY(0)';
             
+            // SUBMIT WITH VALIDATION
             form.querySelector('#submitForm').onclick = () => {
                 const userData = {
                     sprintName: form.querySelector('#sprintName').value,
-                    todo: parseInt(form.querySelector('#todoCount').value) || 0,
-                    inProgress: parseInt(form.querySelector('#inProgressCount').value) || 0,
-                    done: parseInt(form.querySelector('#doneCount').value) || 0
+                    todo: form.querySelector('#todoCount').value,
+                    inProgress: form.querySelector('#inProgressCount').value,
+                    done: form.querySelector('#doneCount').value
                 };
                 
-                if (userData.todo + userData.inProgress + userData.done === 0) {
-                    this.showNotification('Please enter at least some issues', 'warning');
+                // VALIDATE INPUT
+                const validation = validator.validateSprintInput(userData);
+                
+                if (!validation.isValid) {
+                    // SHOW ERRORS
+                    const errorDisplay = form.querySelector('#errorDisplay');
+                    const errorList = form.querySelector('#errorList');
+                    errorDisplay.style.display = 'block';
+                    errorList.innerHTML = validation.errors.map(err => `• ${err}`).join('<br>');
+                    
+                    // Shake animation for error
+                    formElement.style.animation = 'shake 0.5s';
+                    setTimeout(() => formElement.style.animation = '', 500);
+                    
                     return;
                 }
                 
+                // SHOW WARNINGS IF ANY
+                if (validation.warnings.length > 0) {
+                    console.log('Warnings:', validation.warnings);
+                }
+                
+                // PROCEED WITH VALIDATED DATA
                 if (document.body.contains(form)) {
                     document.body.removeChild(form);
                 }
-                resolve(userData);
+                resolve(validation.validatedData);
             };
+
+            // Add shake animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes shake {
+                    0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+                    25% { transform: translate(-50%, -50%) translateX(-10px); }
+                    75% { transform: translate(-50%, -50%) translateX(10px); }
+                }
+            `;
+            document.head.appendChild(style);
         });
     }
 
@@ -769,9 +908,25 @@ Done:        ${doneBar} ${sprintData.done}`;
         });
     }
   
-    // SHARING OPTIONS
+    // SHARING OPTIONS 
     async showSharingOptions() {
+        // PREVENT DUPLICATE DIALOGS with better detection
+        if (document.querySelector('#sharingDialog') || document.querySelector('#sharingOverlay')) {
+            console.log("Export dialog already open, preventing duplicate");
+            this.showNotification('⚠️ Export dialog is already open', 'warning');
+            return Promise.reject(new Error('Dialog already open'));
+        }
+        
         return new Promise((resolve, reject) => {
+            let dialogRemoved = false;
+            
+            const safeRemoveDialog = () => {
+                if (!dialogRemoved && document.body.contains(dialog)) {
+                    document.body.removeChild(dialog);
+                    dialogRemoved = true;
+                }
+            };
+
             const dialog = document.createElement('div');
             dialog.innerHTML = `
                 <div id="sharingDialog" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 16px; z-index: 10000; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: 1px solid #e1e5e9; font-family: 'Segoe UI', system-ui, sans-serif; min-width: 400px;">
@@ -815,25 +970,44 @@ Done:        ${doneBar} ${sprintData.done}`;
             
             document.body.appendChild(dialog);
 
-            const closeDialog = () => {
-                document.body.removeChild(dialog);
-                reject(new Error('User cancelled'));
+            const closeDialog = (result = null) => {
+                safeRemoveDialog();
+                if (result === null) {
+                    resolve('cancelled');
+                } else {
+                    resolve(result);
+                }
             };
 
-            dialog.querySelector('#cancelSharing').onclick = closeDialog;
-            dialog.querySelector('#sharingOverlay').onclick = closeDialog;
+            // SINGLE event handler for cancel
+            const cancelBtn = dialog.querySelector('#cancelSharing');
+            const overlay = dialog.querySelector('#sharingOverlay');
+            
+            const cancelHandler = () => closeDialog();
+            cancelBtn.onclick = cancelHandler;
+            overlay.onclick = cancelHandler;
 
+            // SINGLE event handler for options
             const buttons = dialog.querySelectorAll('.shareOption');
             buttons.forEach(btn => {
                 btn.onmouseenter = () => btn.style.transform = 'translateY(-2px)';
                 btn.onmouseleave = () => btn.style.transform = 'translateY(0)';
                 
-                btn.onclick = () => {
+                btn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent event bubbling
                     const action = btn.getAttribute('data-action');
-                    document.body.removeChild(dialog);
-                    resolve(action);
+                    closeDialog(action);
                 };
             });
+
+            // Safety timeout - auto cleanup if something goes wrong
+            setTimeout(() => {
+                if (!dialogRemoved && document.body.contains(dialog)) {
+                    console.warn('Dialog auto-cleanup triggered');
+                    safeRemoveDialog();
+                    reject(new Error('Dialog timeout'));
+                }
+            }, 30000); // 30 second timeout
         });
     }
 
@@ -874,44 +1048,43 @@ Done:        ${doneBar} ${sprintData.done}`;
         this.showNotification('Opening email client...', 'info');
     }
 
-    // EXPORT TO PDF
+    // EXPORT TO PDF - Using native browser print with auto-save
     exportToPDF(content, sprintData) {
         try {
-            const printWindow = window.open('', '_blank');
             const sprintName = sprintData.sprintName || 'Sprint Report';
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `${sprintName.replace(/\s+/g, '_')}_${timestamp}`;
+            
+            // Create a new window with the content
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            
+            if (!printWindow) {
+                this.showNotification('❌ Please allow popups for this site', 'error');
+                return;
+            }
             
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>${sprintName} - Report</title>
+                    <meta charset="UTF-8">
+                    <title>${filename}</title>
                     <style>
-                        @page { size: A4; margin: 20mm; }
+                        @page { 
+                            size: A4; 
+                            margin: 15mm;
+                        }
+                        * { 
+                            margin: 0; 
+                            padding: 0; 
+                            box-sizing: border-box; 
+                        }
                         body {
                             font-family: 'Segoe UI', Arial, sans-serif;
                             line-height: 1.6;
                             color: #2d3748;
-                            max-width: 800px;
-                            margin: 0 auto;
                             padding: 20px;
-                        }
-                        h1 {
-                            color: #667eea;
-                            border-bottom: 3px solid #667eea;
-                            padding-bottom: 10px;
-                            margin-bottom: 20px;
-                        }
-                        pre {
-                            background: #f8fafc;
-                            padding: 15px;
-                            border-radius: 8px;
-                            border-left: 4px solid #667eea;
-                            overflow-x: auto;
-                            white-space: pre-wrap;
-                            word-wrap: break-word;
-                            font-family: 'Courier New', monospace;
-                            font-size: 12px;
-                            line-height: 1.5;
+                            background: white;
                         }
                         .header {
                             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -919,6 +1092,32 @@ Done:        ${doneBar} ${sprintData.done}`;
                             padding: 20px;
                             border-radius: 10px;
                             margin-bottom: 20px;
+                            page-break-inside: avoid;
+                        }
+                        .header h1 {
+                            margin: 0;
+                            font-size: 24px;
+                            color: white;
+                        }
+                        .header .date {
+                            margin-top: 5px;
+                            opacity: 0.9;
+                            font-size: 13px;
+                        }
+                        .content {
+                            background: #f8fafc;
+                            padding: 20px;
+                            border-radius: 10px;
+                            border: 1px solid #e2e8f0;
+                            margin-bottom: 20px;
+                        }
+                        pre {
+                            white-space: pre-wrap;
+                            word-wrap: break-word;
+                            font-family: 'Courier New', 'Consolas', monospace;
+                            font-size: 11px;
+                            line-height: 1.5;
+                            margin: 0;
                         }
                         .footer {
                             margin-top: 30px;
@@ -926,46 +1125,115 @@ Done:        ${doneBar} ${sprintData.done}`;
                             border-top: 2px solid #e2e8f0;
                             text-align: center;
                             color: #718096;
-                            font-size: 12px;
+                            font-size: 11px;
+                            page-break-inside: avoid;
                         }
-                        @media print { body { padding: 0; } .no-print { display: none; } }
+                        .footer strong {
+                            color: #667eea;
+                        }
+                        .no-print {
+                            position: fixed;
+                            top: 10px;
+                            right: 10px;
+                            padding: 12px 24px;
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            font-weight: 600;
+                            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                            z-index: 1000;
+                        }
+                        .no-print:hover {
+                            background: #5568d3;
+                        }
+                        .instructions {
+                            position: fixed;
+                            top: 60px;
+                            right: 10px;
+                            padding: 12px 16px;
+                            background: #fffbeb;
+                            border: 2px solid #fbbf24;
+                            border-radius: 8px;
+                            font-size: 12px;
+                            max-width: 300px;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                            z-index: 1000;
+                        }
+                        .instructions strong {
+                            display: block;
+                            margin-bottom: 8px;
+                            color: #92400e;
+                        }
+                        .instructions ol {
+                            margin-left: 20px;
+                            color: #92400e;
+                        }
+                        .instructions li {
+                            margin: 4px 0;
+                        }
+                        @media print {
+                            body { 
+                                padding: 0; 
+                            }
+                            .no-print, .instructions { 
+                                display: none !important; 
+                            }
+                            .header {
+                                background: #667eea !important;
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
+                            .content {
+                                background: #f8fafc !important;
+                                -webkit-print-color-adjust: exact;
+                                print-color-adjust: exact;
+                            }
+                        }
                     </style>
                 </head>
                 <body>
+                    <button class="no-print" onclick="window.print()">🖨️ Save as PDF</button>
+                    
+                    <div class="instructions no-print">
+                        <strong>📄 How to Save as PDF:</strong>
+                        <ol>
+                            <li>Click the button above</li>
+                            <li>Select "Save as PDF" as destination</li>
+                            <li>Click "Save"</li>
+                        </ol>
+                        <div style="margin-top: 8px; font-size: 11px; color: #78716c;">
+                            Suggested filename: <strong>${filename}.pdf</strong>
+                        </div>
+                    </div>
+                    
                     <div class="header">
-                        <h1 style="margin: 0; color: white; border: none;">📊 ${sprintName}</h1>
-                        <p style="margin: 5px 0 0 0; opacity: 0.9;">Generated: ${new Date().toLocaleString()}</p>
+                        <h1>📊 ${sprintName}</h1>
+                        <div class="date">Generated: ${new Date().toLocaleString()}</div>
                     </div>
-                    <pre>${content}</pre>
+                    <div class="content">
+                        <pre>${content}</pre>
+                    </div>
                     <div class="footer">
-                        <p><strong>SprintSynapse Professional Edition</strong></p>
                         <p>AI-Powered Sprint Analytics & Reporting</p>
-                    </div>
-                    <div class="no-print" style="margin-top: 20px; text-align: center;">
-                        <button onclick="window.print()" style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; margin-right: 10px;">
-                            🖨️ Print / Save as PDF
-                        </button>
-                        <button onclick="window.close()" style="padding: 12px 24px; background: #e2e8f0; color: #2d3748; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;">
-                            Close
-                        </button>
                     </div>
                 </body>
                 </html>
             `);
             
             printWindow.document.close();
-            printWindow.onload = () => {
-                setTimeout(() => printWindow.print(), 250);
-            };
             
-            this.showNotification('📄 PDF export ready - Print dialog opened', 'success');
+            this.showNotification('📄 PDF preview opened - Click "Save as PDF" button', 'success');
+            
         } catch (error) {
             console.error('PDF Export Error:', error);
             this.showNotification('❌ PDF export failed', 'error');
         }
     }
 
-    // EXPORT TO CSV
+// EXPORT TO CSV
     exportToCSV(sprintData) {
         try {
             const csvContent = [
@@ -1047,16 +1315,196 @@ Done:        ${doneBar} ${sprintData.done}`;
             }, 300);
         }, 3000);
     }
+
+}
+
+// ENHANCED INPUT VALIDATION MODULE
+// Addresses: negative numbers, huge values, empty sprint name
+
+class InputValidator {
+    constructor() {
+        this.MAX_ISSUE_COUNT = 500;  // Maximum realistic issue count per field
+        this.MIN_ISSUE_COUNT = 0;
+        this.WARNING_THRESHOLD = 200; // Show warning above this
+    }
+
+    // Validate sprint data input
+    validateSprintInput(sprintData) {
+        const errors = [];
+        const warnings = [];
+
+        // 1. SPRINT NAME VALIDATION
+        const sprintName = this.validateSprintName(sprintData.sprintName);
+        if (sprintName.hasDefault) {
+            warnings.push('Using default sprint name');
+        }
+
+        // 2. NUMERIC FIELDS VALIDATION
+        const todo = this.validateIssueCount(sprintData.todo, 'To Do');
+        const inProgress = this.validateIssueCount(sprintData.inProgress, 'In Progress');
+        const done = this.validateIssueCount(sprintData.done, 'Done');
+
+        // Collect validation errors
+        if (todo.error) errors.push(todo.error);
+        if (inProgress.error) errors.push(inProgress.error);
+        if (done.error) errors.push(done.error);
+
+        // 3. CHECK FOR ALL ZEROS
+        const total = todo.value + inProgress.value + done.value;
+        if (total === 0) {
+            errors.push('At least one issue count must be greater than 0');
+        }
+
+        // 4. WARNING FOR LARGE BUT VALID NUMBERS
+        if (total > this.WARNING_THRESHOLD && total <= this.MAX_ISSUE_COUNT * 3) {
+            warnings.push(`Large sprint detected (${total} total issues). Consider breaking into smaller sprints.`);
+        }
+
+        // 5. WARNING FOR INDIVIDUAL FIELD THRESHOLDS
+        if (todo.value > this.WARNING_THRESHOLD && todo.value <= this.MAX_ISSUE_COUNT) {
+            warnings.push(`To Do count is high (${todo.value} issues)`);
+        }
+        if (inProgress.value > this.WARNING_THRESHOLD && inProgress.value <= this.MAX_ISSUE_COUNT) {
+            warnings.push(`In Progress count is high (${inProgress.value} issues)`);
+        }
+        if (done.value > this.WARNING_THRESHOLD && done.value <= this.MAX_ISSUE_COUNT) {
+            warnings.push(`Done count is high (${done.value} issues)`);
+        }
+
+        // Return validation result
+        return {
+            isValid: errors.length === 0,
+            errors: errors,
+            warnings: warnings,
+            validatedData: {
+                sprintName: sprintName.value,
+                todo: todo.value,
+                inProgress: inProgress.value,
+                done: done.value
+            }
+        };
+    }
+
+    // Validate sprint name
+    validateSprintName(name) {
+        const trimmedName = (name || '').trim();
+        
+        if (!trimmedName || trimmedName.length === 0) {
+            return {
+                value: `Sprint ${new Date().getMonth() + 1}`,
+                hasDefault: true
+            };
+        }
+
+        // Check for excessive length
+        if (trimmedName.length > 100) {
+            return {
+                value: trimmedName.substring(0, 100),
+                hasDefault: false,
+                warning: 'Sprint name truncated to 100 characters'
+            };
+        }
+
+        // Sanitize sprint name (remove special characters that could cause issues)
+        const sanitizedName = trimmedName.replace(/[<>:"\/\\|?*\x00-\x1F]/g, '');
+        
+        if (sanitizedName.length === 0) {
+            return {
+                value: `Sprint ${new Date().getMonth() + 1}`,
+                hasDefault: true
+            };
+        }
+
+        return {
+            value: sanitizedName,
+            hasDefault: false
+        };
+    }
+
+    // Validate issue count
+    validateIssueCount(value, fieldName) {
+        // Convert to string first to handle edge cases
+        const stringValue = String(value).trim();
+        
+        // 1. CHECK FOR EMPTY INPUT
+        if (stringValue === '' || stringValue === null || stringValue === undefined) {
+            return {
+                value: 0,
+                error: `${fieldName}: Cannot be empty (set to 0)`
+            };
+        }
+
+        // 2. PARSE THE VALUE
+        let numValue = Number(stringValue);
+
+        // 3. CHECK FOR INVALID INPUT (NaN)
+        if (isNaN(numValue) || !isFinite(numValue)) {
+            return {
+                value: 0,
+                error: `${fieldName}: Invalid number format (set to 0)`
+            };
+        }
+
+        // 4. CHECK FOR DECIMAL NUMBERS (round to integer)
+        if (numValue % 1 !== 0) {
+            const rounded = Math.round(numValue);
+            return {
+                value: rounded,
+                error: `${fieldName}: Decimal value ${numValue} rounded to ${rounded}`
+            };
+        }
+
+        // 5. CHECK FOR NEGATIVE NUMBERS
+        if (numValue < this.MIN_ISSUE_COUNT) {
+            return {
+                value: 0,
+                error: `${fieldName}: Negative values not allowed (set to 0)`
+            };
+        }
+
+        // 6. CHECK FOR VERY LARGE NUMBERS
+        if (numValue > this.MAX_ISSUE_COUNT) {
+            return {
+                value: 0,
+                error: `${fieldName}: Value ${numValue} exceeds maximum of ${this.MAX_ISSUE_COUNT} (set to 0)`
+            };
+        }
+
+        // 7. VALID INPUT
+        return {
+            value: Math.floor(numValue), // Ensure integer
+            error: null
+        };
+    }
+
+    // Format validation errors for display
+    formatErrors(errors) {
+        if (errors.length === 0) return '';
+        
+        return errors.map((error, index) => `${index + 1}. ${error}`).join('\n');
+    }
+
+    // Format warnings for display
+    formatWarnings(warnings) {
+        if (warnings.length === 0) return '';
+        
+        return warnings.map((warning, index) => `⚠️ ${warning}`).join('\n');
+    }
 }
 
 // Initialize the extension
-const sprintSynapse = new SprintSynapseProfessional();
+const sprintSynapse = new SprintSynapse();
 window.sprintSynapse = sprintSynapse;
 
 // Message listener for extension communication
 if (typeof chrome !== 'undefined' && chrome.runtime) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log("Message received:", request);
+        
+        if (request.action === 'checkJiraPage') {
+            sendResponse({ isJira: sprintSynapse.isJiraPage() });
+            return true;
+        }
         
         if (request.action === 'generateSummary') {
             sprintSynapse.generateSummary()
@@ -1074,4 +1522,4 @@ if (typeof chrome !== 'undefined' && chrome.runtime) {
     });
 }
 
-console.log("SprintSynapse Professional - Chrome Built-in AI Ready!");
+console.log("SprintSynapse - Chrome Built-in AI Ready!");

@@ -30,38 +30,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Sprint Summary Button
     sprintSummaryBtn.addEventListener('click', function() {
-        showLoading();
-        
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             if (!tabs[0]) {
-                hideLoading();
                 alert('No active tab found');
                 return;
             }
             
+            // CHECK JIRA STATUS BEFORE SHOWING LOADING
             chrome.tabs.sendMessage(
-                tabs[0].id, 
-                {action: 'generateSummary'}, 
-                handleResponse
+                tabs[0].id,
+                {action: 'checkJiraPage'},
+                function(response) {
+                    if (chrome.runtime.lastError) {
+                        alert('Please refresh the page and try again');
+                        return;
+                    }
+                    
+                    if (!response || !response.isJira) {
+                        alert('⚠️ This feature only works on Jira pages.\n\nPlease navigate to a Jira page first.');
+                        return;
+                    }
+                    
+                    // NOW show loading and proceed
+                    showLoading();
+                    chrome.tabs.sendMessage(
+                        tabs[0].id, 
+                        {action: 'generateSummary'}, 
+                        handleResponse
+                    );
+                }
             );
         });
     });
 
     // Status Update Button
     statusUpdateBtn.addEventListener('click', function() {
-        showLoading();
-        
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             if (!tabs[0]) {
-                hideLoading();
                 alert('No active tab found');
                 return;
             }
             
+            // CHECK JIRA STATUS BEFORE SHOWING LOADING
             chrome.tabs.sendMessage(
-                tabs[0].id, 
-                {action: 'generateStatusUpdate'}, 
-                handleResponse
+                tabs[0].id,
+                {action: 'checkJiraPage'},
+                function(response) {
+                    if (chrome.runtime.lastError) {
+                        alert('Please refresh the page and try again');
+                        return;
+                    }
+                    
+                    if (!response || !response.isJira) {
+                        alert('⚠️ This feature only works on Jira pages.\n\nPlease navigate to a Jira page first.');
+                        return;
+                    }
+                    
+                    // NOW show loading and proceed
+                    showLoading();
+                    chrome.tabs.sendMessage(
+                        tabs[0].id, 
+                        {action: 'generateStatusUpdate'}, 
+                        handleResponse
+                    );
+                }
             );
         });
     });
