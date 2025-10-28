@@ -33,7 +33,94 @@ sprintsynapse-chrome-ai/
     └── icon25.png
     └── icon125.png
 ```    
+## Architecture Flow (with AI Fallback)
 
+```
+                ┌────────────────────────────────────────┐
+                │          User (Scrum Master)           │
+                │  • Opens Jira Board in Chrome          │
+                │  • Clicks SprintSynapse Extension Icon │
+                └────────────────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌────────────────────────────┐
+                     │  Chrome Extension (UI)     │
+                     │  popup.html + popup.js     │
+                     │  • Collects sprint data    │
+                     │  • Validates fields        │
+                     └────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌────────────────────────────┐
+                     │  Content Script            │
+                     │  (content.js)              │
+                     │  • Reads active Jira page  │
+                     │  • Ensures Jira context    │
+                     │  • Sends data to background│
+                     └────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌────────────────────────────────────────┐
+                     │  Background Service (background.js)    │
+                     │  • Receives sprint data from UI        │
+                     │  • Checks AI availability              │
+                     │                                        │
+                     │  if (Gemini Nano APIs available)       │
+                     │      → Use built-in AI APIs            │
+                     │         ▫ Summarizer API               │
+                     │         ▫ Writer API                   │
+                     │         ▫ Prompt API                   │
+                     │  else                                  │
+                     │      → Activate Fallback Engine        │
+                     │         ▫ Enhanced-Analytics.js        │
+                     │         ▫ Local statistical model      │
+                     │         ▫ Template-based summaries     │
+                     └────────────────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌────────────────────────────┐
+                     │  AI / Fallback Processor   │
+                     │  • Normal mode: parse      │
+                     │    AI JSON                 │
+                     │  • Fallback mode: compute  │
+                     │    metrics locally (avg %, │
+                     │    velocity, progress)     │
+                     │  • Generates charts & text │
+                     └────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌─────────────────────────────┐
+                     │  UI Renderer (popup.html)   │
+                     │  • Displays Sprint Report   │
+                     │  • Indicates source used:   │
+                     │    "Source: Gemini Nano"    │
+                     │      or                     │
+                     │    "Source: Enhanced        │
+                     │     Analytics"              │
+                     │  • Offers export options    │
+                     │    ▫ Copy ▫ PDF             │
+                     │    ▫ CSV  ▫ Email           │
+                     └─────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌────────────────────────────┐
+                     │  Export & Sharing Layer    │
+                     │  • Copy to Clipboard       │
+                     │  • Generate PDF / CSV      │
+                     │  • Send via Gmail/Outlook  │
+                     │  • Offline-friendly        │
+                     └────────────────────────────┘
+                                    │
+                                    ▼
+                     ┌────────────────────────────┐
+                     │  End User Output           │
+                     │  • AI-generated or         │
+                     │    fallback Sprint         │
+                     │    Analysis Report         │
+                     │  • Exported file / email   │
+                     └────────────────────────────┘
+
+```
 ## Installation
 
 ### Prerequisites
