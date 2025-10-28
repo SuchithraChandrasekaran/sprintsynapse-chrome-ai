@@ -108,7 +108,6 @@ sprintsynapse-chrome-ai/
                      │  • Copy to Clipboard       │
                      │  • Generate PDF / CSV      │
                      │  • Send via Gmail/Outlook  │
-                     │  • Offline-friendly        │
                      └────────────────────────────┘
                                     │
                                     ▼
@@ -121,6 +120,30 @@ sprintsynapse-chrome-ai/
                      └────────────────────────────┘
 
 ```
+
+## Flow Summary (Decision Logic)
+```
+User → Enters Sprint Data
+        ↓
+Content Script → Validates Jira context
+        ↓
+Background.js:
+   ├─ If Gemini Nano available → Use AI APIs
+   │      • Summarizer → Sprint overview
+   │      • Writer → Email draft
+   │      • Prompt → Risk/Blocker insights
+   └─ Else → Trigger Fallback
+          • Local analytics engine
+          • Template-based insights
+          • Uses computed metrics
+        ↓
+Processor → Formats + visualizes
+        ↓
+UI → Displays results + source label
+        ↓
+Export Layer → PDF / CSV / Email
+```
+
 ## Installation
 
 ### Prerequisites
